@@ -1,7 +1,7 @@
 package log_test
 
 import (
-	log "basego/log"
+	"basego/log"
 	"testing"
 	"time"
 )
@@ -16,16 +16,11 @@ func TestLogger(t *testing.T) {
 			for j := 0; j < i; j++ {
 				sr = sr + "asdf asd "
 			}
-			log.I(sr, i)
-			log.D(sr, i)
-			log.E(sr, i)
-			log.W(sr, i)
-			//<-time.After(time.Second)
+			log.Log(sr, i)
+			<-time.After(time.Second)
 		}(i)
 	}
 
-	log.F("fatal", "ok")
-
 	<-time.After(time.Second)
-	log.Fini()
+	log.LogFini()
 }

@@ -9,13 +9,13 @@ import (
 
 /* ----------------------------------------------------------------------------
 	async log: write to file, and roll file by dialy, file name: log file + year + month + day + .log
-	init: Init (LogLvl, Log File Name, Is Show In Console)
-	close: Fini ()
-	log info: I (...)
-	log debug: D (...)
-	log warning: E (...)
-	log error: E (...)
-	log fatal: F (...)
+	init: LogInit (LogLvl, Log File Name, Is Show In Console)
+	close: LogFini ()
+	log info: Log (...)
+	log debug: LogD (...)
+	log warning: LogE (...)
+	log error: LogE (...)
+	log fatal: LogF (...)
 ----------------------------------------------------------------------------*/
 
 type LogLvl int
@@ -32,31 +32,31 @@ const (
 
 // ----------------------------------------------------------------------------
 // Log Info
-func I(v ...interface{}) {
+func Log(v ...interface{}) {
 	log(Inf, v...)
 }
 
 // ----------------------------------------------------------------------------
 // Log Debug
-func D(v ...interface{}) {
+func LogD(v ...interface{}) {
 	log(Dbg, v...)
 }
 
 // ----------------------------------------------------------------------------
 // Log Warning
-func W(v ...interface{}) {
+func LogW(v ...interface{}) {
 	log(War, v...)
 }
 
 // ----------------------------------------------------------------------------
 // Log Error
-func E(v ...interface{}) {
+func LogE(v ...interface{}) {
 	log(Err, v...)
 }
 
 // ----------------------------------------------------------------------------
 // Log Fatal
-func F(v ...interface{}) {
+func LogF(v ...interface{}) {
 	log(Fat, v...)
 }
 
@@ -96,7 +96,7 @@ func Init(lvl LogLvl, logfile string, console bool) error {
 	_logger.lvl = lvl
 	_logger.console = console
 	lastTime := time.Now()
-	file, err := rollFile(nil, logfile, lastTime, lastTime)
+	file, err := logRollFile(nil, logfile, lastTime, lastTime)
 	if err != nil {
 		return err
 	}
@@ -111,7 +111,7 @@ func Init(lvl LogLvl, logfile string, console bool) error {
 		for e := range _logger.c {
 			if e != nil {
 				var err error
-				file, err = rollFile(file, logfile, lastTime, e.time)
+				file, err = logRollFile(file, logfile, lastTime, e.time)
 				if err != nil {
 					return
 				}
@@ -159,7 +159,7 @@ func log(lvl LogLvl, v ...interface{}) {
 
 // ----------------------------------------------------------------------------
 // roll file by dialy
-func rollFile(file *os.File, logfile string, fileTime time.Time, logTime time.Time) (*os.File, error) {
+func logRollFile(file *os.File, logfile string, fileTime time.Time, logTime time.Time) (*os.File, error) {
 
 	if fileTime.Year() != logTime.Year() || fileTime.YearDay() != logTime.YearDay() || file == nil {
 		if file != nil {
@@ -176,7 +176,7 @@ func rollFile(file *os.File, logfile string, fileTime time.Time, logTime time.Ti
 
 // ----------------------------------------------------------------------------
 // close log
-func Fini() {
+func LogFini() {
 	if _logger != nil {
 		_logger.c <- nil
 	}
