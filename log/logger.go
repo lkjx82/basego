@@ -38,25 +38,25 @@ func Log(v ...interface{}) {
 
 // ----------------------------------------------------------------------------
 // Log Debug
-func LogD(v ...interface{}) {
+func D(v ...interface{}) {
 	log(Dbg, v...)
 }
 
 // ----------------------------------------------------------------------------
 // Log Warning
-func LogW(v ...interface{}) {
+func W(v ...interface{}) {
 	log(War, v...)
 }
 
 // ----------------------------------------------------------------------------
 // Log Error
-func LogE(v ...interface{}) {
+func E(v ...interface{}) {
 	log(Err, v...)
 }
 
 // ----------------------------------------------------------------------------
 // Log Fatal
-func LogF(v ...interface{}) {
+func F(v ...interface{}) {
 	log(Fat, v...)
 }
 
@@ -96,7 +96,7 @@ func Init(lvl LogLvl, logfile string, console bool) error {
 	_logger.lvl = lvl
 	_logger.console = console
 	lastTime := time.Now()
-	file, err := logRollFile(nil, logfile, lastTime, lastTime)
+	file, err := rollFile(nil, logfile, lastTime, lastTime)
 	if err != nil {
 		return err
 	}
@@ -111,7 +111,7 @@ func Init(lvl LogLvl, logfile string, console bool) error {
 		for e := range _logger.c {
 			if e != nil {
 				var err error
-				file, err = logRollFile(file, logfile, lastTime, e.time)
+				file, err = rollFile(file, logfile, lastTime, e.time)
 				if err != nil {
 					return
 				}
@@ -159,7 +159,7 @@ func log(lvl LogLvl, v ...interface{}) {
 
 // ----------------------------------------------------------------------------
 // roll file by dialy
-func logRollFile(file *os.File, logfile string, fileTime time.Time, logTime time.Time) (*os.File, error) {
+func rollFile(file *os.File, logfile string, fileTime time.Time, logTime time.Time) (*os.File, error) {
 
 	if fileTime.Year() != logTime.Year() || fileTime.YearDay() != logTime.YearDay() || file == nil {
 		if file != nil {
@@ -176,7 +176,7 @@ func logRollFile(file *os.File, logfile string, fileTime time.Time, logTime time
 
 // ----------------------------------------------------------------------------
 // close log
-func LogFini() {
+func Fini() {
 	if _logger != nil {
 		_logger.c <- nil
 	}

@@ -1,7 +1,7 @@
 package log_test
 
 import (
-	"basego/log"
+	"github.com/lkjx82/basego/log"
 	"testing"
 	"time"
 )
@@ -22,5 +22,5 @@ func TestLogger(t *testing.T) {
 	}
 
 	<-time.After(time.Second)
-	log.LogFini()
+	log.Fini()
 }

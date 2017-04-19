@@ -1,7 +1,7 @@
 package conn
 
 import (
-	"basego/obj_pool"
+	"github.com/lkjx82/basego/obj_pool"
 	"net"
 	"sync"
 

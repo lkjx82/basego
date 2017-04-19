@@ -7,7 +7,7 @@ import (
 	"sync"
 	"testing"
 
-	baseId "basego/id"
+	baseId "github.com/lkjx82/basego/id"
 )
 
 // -----------------------------------------------------------------------------

@@ -5,11 +5,8 @@ package conn_test
 import (
 	"bytes"
 	"fmt"
-	conn "basego/conn"
-	"basego/obj_pool"
-	//	"os"
-	//	"os/signal"
-	//	"syscall"
+	conn "github.com/lkjx82/basego/conn"
+	"github.com/lkjx82/basego/obj_pool"
 	"testing"
 	"time"
 )

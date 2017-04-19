@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	baseTaskPool "basego/task_pool"
+	baseTaskPool "github.com/lkjx82/basego/task_pool"
 
 	"fmt"
 )

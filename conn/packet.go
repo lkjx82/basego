@@ -4,7 +4,7 @@ package conn
 
 import (
 	"encoding/binary"
-	"basego/obj_pool"
+	"github.com/lkjx82/basego/obj_pool"
 )
 
 // -----------------------------------------------------------------------------

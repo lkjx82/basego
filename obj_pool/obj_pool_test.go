@@ -4,7 +4,7 @@ import (
 	"runtime"
 	"testing"
 
-	baseObjPool "basego/obj_pool"
+	baseObjPool "github.com/lkjx82/basego/obj_pool"
 
 	"fmt"
 	"math/rand"
