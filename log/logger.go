@@ -1,22 +1,26 @@
 package log
 
 import (
-	"fmt"
 	"os"
-	"runtime"
 	"time"
+	"fmt"
+	"runtime"
 )
 
 /* ----------------------------------------------------------------------------
-	async log: write to file, and roll file by dialy, file name: log file + year + month + day + .log
-	init: LogInit (LogLvl, Log File Name, Is Show In Console)
+	async log: write to File, and roll File by dialy, File name: log File + year + month + day + .log
+	init: LogInit (LogLvl, I File Name, Is Show In Console)
 	close: LogFini ()
-	log info: Log (...)
-	log debug: LogD (...)
-	log warning: LogE (...)
-	log error: LogE (...)
-	log fatal: LogF (...)
+	log info: I (...)
+	log debug: D (...)
+	log warning: W (...)
+	log error: E (...)
+	log fatal: F (...)
 ----------------------------------------------------------------------------*/
+
+type Hook interface {
+	OnLog (le *LogEntity)
+}
 
 type LogLvl int
 
@@ -31,51 +35,53 @@ const (
 )
 
 // ----------------------------------------------------------------------------
-// Log Info
-func Log(v ...interface{}) {
+// I Info
+func I(v ...interface{}) {
 	log(Inf, v...)
 }
 
 // ----------------------------------------------------------------------------
-// Log Debug
+// I Debug
 func D(v ...interface{}) {
 	log(Dbg, v...)
 }
 
 // ----------------------------------------------------------------------------
-// Log Warning
+// I Warning
 func W(v ...interface{}) {
 	log(War, v...)
 }
 
 // ----------------------------------------------------------------------------
-// Log Error
+// I Error
 func E(v ...interface{}) {
 	log(Err, v...)
 }
 
 // ----------------------------------------------------------------------------
-// Log Fatal
+// I Fatal
 func F(v ...interface{}) {
 	log(Fat, v...)
 }
 
 // ----------------------------------------------------------------------------
 
-type logEntity struct {
-	lvl  LogLvl
-	time time.Time
-	msg  string
-	file string
-	line int
+type LogEntity struct {
+	Lvl  LogLvl
+	Time time.Time
+	Msg  string
+	File string
+	Func string
+	Line int
 }
 
 // ----------------------------------------------------------------------------
 
 type asynLogger struct {
 	lvl     LogLvl
-	c       chan *logEntity
+	c       chan *LogEntity
 	console bool
+	hook 	Hook
 }
 
 // ----------------------------------------------------------------------------
@@ -83,18 +89,19 @@ type asynLogger struct {
 var _logger *asynLogger = nil
 
 // ----------------------------------------------------------------------------
-// switch log msg show in console
+// switch log Msg show in console
 func SetLogConsole(show bool) {
 	_logger.console = show
 }
 
 // ----------------------------------------------------------------------------
 // log init
-func Init(lvl LogLvl, logfile string, console bool) error {
+func Init(lvl LogLvl, logfile string, console bool, hook Hook) error {
 	_logger = &asynLogger{}
-	_logger.c = make(chan *logEntity, 100)
+	_logger.c = make(chan *LogEntity, 100)
 	_logger.lvl = lvl
 	_logger.console = console
+	_logger.hook = hook
 	lastTime := time.Now()
 	file, err := rollFile(nil, logfile, lastTime, lastTime)
 	if err != nil {
@@ -111,15 +118,20 @@ func Init(lvl LogLvl, logfile string, console bool) error {
 		for e := range _logger.c {
 			if e != nil {
 				var err error
-				file, err = rollFile(file, logfile, lastTime, e.time)
+				file, err = rollFile(file, logfile, lastTime, e.Time)
 				if err != nil {
 					return
 				}
 
-				logStr := fmt.Sprintf("%s-%s| %s  (%s:%d)\n", logLvlStr[e.lvl], e.time.Format("15:04:05.999"), e.msg, e.file, e.line)
+				logStr := fmt.Sprintf("%s-%s| %s  (%s:%d)\n", logLvlStr[e.Lvl],
+					e.Time.Format("15:04:05.999"), e.Msg, e.Func, e.Line)
 				file.Write([]byte(logStr))
 
-				if e.lvl == Fat {
+				if hook != nil {
+					hook.OnLog(e)
+				}
+
+				if e.Lvl == Fat {
 					os.Exit(0)
 				}
 
@@ -138,27 +150,33 @@ func log(lvl LogLvl, v ...interface{}) {
 	if lvl < _logger.lvl {
 		return
 	}
-	_, file, line, ok := runtime.Caller(2)
+
+	fun := "Func???"
+	pc, file, line, ok := runtime.Caller(2)
 	if !ok {
-		file = "???"
+		file = "File???"
 		line = 0
+	} else {
+		fun = runtime.FuncForPC(pc).Name()
 	}
+
 	msg := fmt.Sprint(v...)
-	e := logEntity{}
-	e.lvl = lvl
-	e.file = file
-	e.line = line
-	e.msg = msg
-	e.time = time.Now()
+	e := LogEntity{}
+	e.Lvl = lvl
+	e.File = file
+	e.Line = line
+	e.Msg = msg
+	e.Func = fun
+	e.Time = time.Now()
 
 	if _logger.console {
-		fmt.Println(logLvlStr[lvl], e.time.Format("15:04:05.999"), e.msg, e.lvl, e.file, e.line)
+		fmt.Println(logLvlStr[lvl], e.Time.Format("15:04:05.999"), e.Msg, e.Lvl, e.Func, e.Line)
 	}
 	_logger.c <- &e
 }
 
 // ----------------------------------------------------------------------------
-// roll file by dialy
+// roll File by dialy
 func rollFile(file *os.File, logfile string, fileTime time.Time, logTime time.Time) (*os.File, error) {
 
 	if fileTime.Year() != logTime.Year() || fileTime.YearDay() != logTime.YearDay() || file == nil {
@@ -176,9 +194,10 @@ func rollFile(file *os.File, logfile string, fileTime time.Time, logTime time.Ti
 
 // ----------------------------------------------------------------------------
 // close log
-func Fini() {
+func Fina() {
 	if _logger != nil {
 		_logger.c <- nil
+		_logger = nil
 	}
 }
 
@@ -193,3 +212,4 @@ var logLvlStr = [5]string{
 }
 
 // ----------------------------------------------------------------------------
+
