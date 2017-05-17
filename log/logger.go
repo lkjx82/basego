@@ -1,10 +1,11 @@
 package log
 
 import (
-	"os"
-	"time"
 	"fmt"
+	"os"
 	"runtime"
+	"strings"
+	"time"
 )
 
 /* ----------------------------------------------------------------------------
@@ -19,7 +20,7 @@ import (
 ----------------------------------------------------------------------------*/
 
 type Hook interface {
-	OnLog (le *LogEntity)
+	OnLog(le *LogEntity)
 }
 
 type LogLvl int
@@ -81,7 +82,7 @@ type asynLogger struct {
 	lvl     LogLvl
 	c       chan *LogEntity
 	console bool
-	hook 	Hook
+	hook    Hook
 }
 
 // ----------------------------------------------------------------------------
@@ -183,9 +184,20 @@ func rollFile(file *os.File, logfile string, fileTime time.Time, logTime time.Ti
 		if file != nil {
 			file.Close()
 		}
+
+		idx := strings.LastIndex(logfile, "/")
+		if idx > 0 {
+			filePath := logfile[:idx]
+			if err := os.MkdirAll(filePath, 0755); err != nil {
+				fmt.Println("mkdir error", filePath)
+				// os.Exit(1)
+				return nil, err
+			}
+		}
+
 		timeStr := logTime.Format("2006-01-02")
 		var err error
-		file, err = os.OpenFile(logfile+timeStr+".log", os.O_RDWR|os.O_APPEND|os.O_CREATE, 0666)
+		file, err = os.OpenFile(logfile+timeStr+".log", os.O_RDWR|os.O_APPEND|os.O_CREATE, 0755)
 		return file, err
 	}
 
@@ -212,4 +224,3 @@ var logLvlStr = [5]string{
 }
 
 // ----------------------------------------------------------------------------
-
