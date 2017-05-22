@@ -79,10 +79,11 @@ type LogEntity struct {
 // ----------------------------------------------------------------------------
 
 type asynLogger struct {
-	lvl     LogLvl
-	c       chan *LogEntity
-	console bool
-	hook    Hook
+	lvl      LogLvl
+	c        chan *LogEntity
+	console  bool
+	hook     Hook
+	keepDays int
 }
 
 // ----------------------------------------------------------------------------
@@ -95,6 +96,10 @@ func SetLogConsole(show bool) {
 	_logger.console = show
 }
 
+func SetKeepDays(days int) {
+	_logger.keepDays = days
+}
+
 // ----------------------------------------------------------------------------
 // log init
 func Init(lvl LogLvl, logfile string, console bool, hook Hook) error {
@@ -103,6 +108,7 @@ func Init(lvl LogLvl, logfile string, console bool, hook Hook) error {
 	_logger.lvl = lvl
 	_logger.console = console
 	_logger.hook = hook
+	_logger.keepDays = 7
 	lastTime := time.Now()
 	file, err := rollFile(nil, logfile, lastTime, lastTime)
 	if err != nil {
@@ -183,6 +189,16 @@ func rollFile(file *os.File, logfile string, fileTime time.Time, logTime time.Ti
 	if fileTime.Year() != logTime.Year() || fileTime.YearDay() != logTime.YearDay() || file == nil {
 		if file != nil {
 			file.Close()
+		}
+
+		// 先删除7天前的
+		delLogTime := logTime.AddDate(0, 0, -_logger.keepDays+1)
+		// 多往前检查 keepDays
+		for i := 0; i < _logger.keepDays; i++ {
+			delLogTime = delLogTime.AddDate(0, 0, -1)
+			delPath := fmt.Sprintf("%s%s.log", logfile, delLogTime.Format("2006-01-02"))
+			fmt.Println("删除 path: ", delPath)
+			os.Remove(delPath)
 		}
 
 		idx := strings.LastIndex(logfile, "/")

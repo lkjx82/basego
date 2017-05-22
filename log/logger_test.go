@@ -1,20 +1,18 @@
 package log_test
 
 import (
-	"github.com/lkjx82/basego/log"
 	"fmt"
+	"github.com/lkjx82/basego/log"
 	"testing"
 	"time"
 )
 
-
 type Hook struct {
 }
 
-func (this *Hook) OnLog (lg *log.LogEntity) {
-	fmt.Println (lg.Lvl, lg.Func, lg.Line, lg.Msg, lg.Time)
+func (this *Hook) OnLog(lg *log.LogEntity) {
+	fmt.Println(lg.Lvl, lg.Func, lg.Line, lg.Msg, lg.Time)
 }
-
 
 func TestLogger(t *testing.T) {
 
